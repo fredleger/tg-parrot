@@ -1,0 +1,18 @@
+# Mac Stuff
+/**/.DS_Store
+
+# Windows stuff
+
+# Linux Stuff
+
+# Sublime Text 3
+/**/*.sublime-project
+/**/*.sublime-workspace
+
+# go stuff
+bin/**
+pkg/**
+src/gopkg.in/**
+
+# project stuff
+/local
