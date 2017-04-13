@@ -1,6 +1,7 @@
 package main
 
 import (
+    "os"
     "log"
     "gopkg.in/telegram-bot-api.v4"
     "github.com/fredleger/golang/parrot"
@@ -8,7 +9,13 @@ import (
 
 func main() {
 
-    bot, err := tgbotapi.NewBotAPI("367497906:AAFz_E_iv11qVLboD-dSRhP8QK0ii8oVlro")
+    var TgToken string
+    TgToken = os.Getenv("TG_TOKEN")
+    if (len(TgToken) <= 0) {
+        log.Panic("Invalid (null) telegram Token !")
+    }
+
+    bot, err := tgbotapi.NewBotAPI(TgToken)
     if err != nil {
         log.Panic(err)
     }

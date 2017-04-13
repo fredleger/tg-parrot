@@ -16,5 +16,5 @@ install:
 	cd src/github.com/fredleger/golang/parrot && go install
 	cd src/github.com/fredleger/golang/parrotbot && go install
 
-dockerize:
+docker-image:
 	docker build -t webofmars/tg-parrot:develop .

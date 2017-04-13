@@ -1,6 +1,8 @@
 FROM golang:1.8-alpine
 MAINTAINER Frederic Leger <leger.frederic@openmailbox.org>
 
+ENV TG_TOKEN ""
+
 RUN mkdir -p /go
 
 # adds git to the image
