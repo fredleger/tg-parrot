@@ -1,0 +1,7 @@
+version: "2"
+
+services:
+  bot:
+    image: fredleger/tg-parrot:1.0
+    environment:
+      - TGBOTTOKEN

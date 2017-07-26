@@ -9,10 +9,12 @@ import (
 
 type parrot struct {
     Name string
-    OnUseridShoulder int
     PreferedSentence string
     AnswersPrefix string
     AnswersRate int
+    LastRepeat time
+    OnUseridShoulder int
+    LastShoulderSwitch time
 }
 
 func NewParrot(name string, sentence string, prefix string, repeatrate int) *parrot {
@@ -44,11 +46,25 @@ func (p parrot) WillRepeat() bool {
     s1 := rand.NewSource(time.Now().UnixNano())
     r1 := rand.New(s1)
     r2 := r1.Intn(p.AnswersRate)
-    
 
     log.Printf("r2:%d / rate:%d" , r2, p.AnswersRate-1)
     switch  {
     case r2 >= p.AnswersRate-1:
+        return true
+    default:
+        return false
+    }
+}
+
+func threesholdExeded(time lastOccurence, float frequency) bool {
+    var timeDelta = lastOccurence - time.Now()
+    var chance    = timeDelta*frequency
+    var s1 = rand.NewSource(time.Now().UnixNano())
+    var r1 = rand.New(s1)
+
+    log.Printf("r1:%d / rate:%d" , r1, chance)
+    switch  {
+    case r1 >= chance:
         return true
     default:
         return false
