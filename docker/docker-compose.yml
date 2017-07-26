@@ -2,6 +2,6 @@ version: "2"
 
 services:
   bot:
-    image: fredleger/tg-parrot:1.0
+    image: fredleger/tg-parrot:1.1
     environment:
       - TGBOTTOKEN
