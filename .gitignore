@@ -11,6 +11,7 @@
 
 # project stuff
 /local
+**/.env-*
 
 # go stuff
 bin/**

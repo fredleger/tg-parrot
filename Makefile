@@ -2,7 +2,7 @@
 
 all: clean install-dep build install
 
-clean: 
+clean:
 	rm -rf bin/*
 
 install-dep:
@@ -17,4 +17,4 @@ install:
 	cd src/github.com/fredleger/golang/parrotbot && go install
 
 docker-image:
-	docker build -t webofmars/tg-parrot:develop .
+	docker build -t webofmars/tg-parrot:develop -f docker/Dockerfile .
