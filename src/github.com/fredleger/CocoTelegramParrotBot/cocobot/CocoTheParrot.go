@@ -4,7 +4,8 @@ import (
     "os"
     "log"
     "gopkg.in/telegram-bot-api.v4"
-    "github.com/fredleger/golang/parrot"
+    "github.com/fredleger/CocoTelegramParrotBot/parrotlib"
+    // "github.com/davecgh/go-spew/spew"
 )
 
 func main() {
@@ -25,7 +26,7 @@ func main() {
     log.Printf("Authorized on account %s", bot.Self.UserName)
 
     // new parrot
-    coco := parrot.NewParrot("coco", "coco est cool, cool est coco !", "yeak !", 7)
+    coco := parrot.NewParrot("coco", "coco est cool, cool est coco !", "yeak !", 0.05)
     //coco.Dump()
 
     // waiting for messages
@@ -40,6 +41,7 @@ func main() {
         }
 
         log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
+        coco.AddUser(update.Message.From.UserName)
 
         if coco.WillRepeat() {
             log.Printf("Parrot is awake !!!")
