@@ -4,4 +4,4 @@ services:
   bot:
     image: fredleger/tg-parrot:stable
     environment:
-      - TGBOTTOKEN
+      - TG_TOKEN
