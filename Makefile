@@ -13,7 +13,8 @@ clean:
 	cd src/github.com/fredleger/CocoTelegramParrotBot/cocobot && go clean
 
 install-dep:
-	go get gopkg.in/telegram-bot-api.v4
+	cd src/github.com/fredleger/CocoTelegramParrotBot/parrotlib && go get -d -v
+	cd src/github.com/fredleger/CocoTelegramParrotBot/cocobot && go get -d -v
 
 build:
 	cd src/github.com/fredleger/CocoTelegramParrotBot/parrotlib && go build
@@ -24,4 +25,4 @@ install:
 	cd src/github.com/fredleger/CocoTelegramParrotBot/cocobot && go install
 
 docker-image:
-	docker build -t webofmars/tg-parrot:develop -f docker/Dockerfile .
+	docker build -t webofmars/tg-parrot:develop -f $(ROOT_DIR)/Dockerfile .
