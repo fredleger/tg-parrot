@@ -4,7 +4,7 @@ import (
     "os"
     "log"
     "gopkg.in/telegram-bot-api.v4"
-    "github.com/fredleger/golang/parrot"
+    "github.com/fredleger/CocoTelegramParrotBot/parrotlib"
 )
 
 func main() {

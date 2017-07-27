@@ -1,21 +1,13 @@
-FROM golang:1.8-alpine
-MAINTAINER Frederic Leger <leger.frederic@openmailbox.org>
+FROM golang:1.8.3-alpine3.6
 
 ENV TG_TOKEN ""
 
-RUN mkdir -p /go
+RUN apk add --no-cache git
 
-# adds git to the image
-RUN apk update && apk add git
+WORKDIR /go/src/github.com/fredleger/CocoTelegramParrotBot/cocobot
+COPY src /go/src
 
-COPY src/ /go/src/
+RUN go-wrapper download && \
+    go-wrapper install
 
-# deps
-RUN go-wrapper download gopkg.in/telegram-bot-api.v4
-
-# install
-RUN cd /go/src && go-wrapper install github.com/fredleger/golang/parrot
-RUN cd /go/src && go-wrapper install github.com/fredleger/golang/parrotbot
-
-WORKDIR /go
-CMD ["/go/bin/parrotbot"]
+CMD ["go-wrapper", "run"]
