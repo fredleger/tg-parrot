@@ -27,7 +27,6 @@ func main() {
 
     // new parrot
     coco := parrot.NewParrot("coco", "coco est cool, cool est coco !", "yeak !", 0.05)
-    //coco.Dump()
 
     // waiting for messages
     u := tgbotapi.NewUpdate(0)
