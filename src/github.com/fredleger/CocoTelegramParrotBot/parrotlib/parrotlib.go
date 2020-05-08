@@ -1,97 +1,103 @@
-package parrot
+package parrotlib
 
 import (
-    "regexp"
-    "time"
-    "math/rand"
-    //"log"
-    "github.com/davecgh/go-spew/spew"
+	"log"
+	"math/rand"
+	"regexp"
+	"time"
+
+	//"log"
+	"github.com/davecgh/go-spew/spew"
 )
 
-type parrot struct {
+type Parrot struct {
+	Name  string
+	Debug bool
 
-    Name string
-    Debug bool
-    PreferedSentence string
-    Users map[string]time.Time
+	PreferedSentence string
+	Users            map[string]time.Time
 
-    RepeatPrefix string
-    RepeatFrequency float64
-    LastRepeat time.Time
+	repeatPrefix      string
+	repeatFrequency   float64
+	RepeatMultiplier  float64
+	RepeatAccumulator float64
+	LastRepeat        time.Time
 
-    OnUseridShoulder string
-    LastShoulderSwitch time.Time
-
+	OnUseridShoulder   string
+	LastShoulderSwitch time.Time
 }
 
 // constructor
-func NewParrot(name string, sentence string, repeatprefix string, repeatfreq float64) parrot {
+func NewParrot(name string, sentence string, repeatPrefix string, repeatFrequency float64, repeatMultiplier float64) Parrot {
 
-    spew.Config.Indent = "\t"
+	spew.Config.Indent = "\t"
 
-    p := new(parrot)
-    p.Name              = name
-    p.OnUseridShoulder  = ""
-    p.PreferedSentence  = sentence
-    p.RepeatPrefix      = repeatprefix
-    p.RepeatFrequency   = repeatfreq
-    p.Users             = make(map[string]time.Time)
-    p.LastShoulderSwitch= time.Now()
-    p.LastRepeat        = time.Now()
-    return *p
+	p := new(Parrot)
+	p.Name = name
+	p.OnUseridShoulder = ""
+	p.PreferedSentence = sentence
+	p.repeatPrefix = repeatPrefix
+	p.repeatFrequency = repeatFrequency
+	p.Users = make(map[string]time.Time)
+	p.LastShoulderSwitch = time.Time{}
+	p.LastRepeat = time.Time{}
+	p.RepeatAccumulator = 0
+	p.RepeatMultiplier = repeatMultiplier
+	return *p
 }
 
-func (p parrot) Dump() {
-    spew.Dump(p)
+func (p Parrot) Dump() {
+	spew.Dump(p)
 }
 
-func (p *parrot) ToString() string {
-    return spew.Sprintf("%#+v", p)
+func (p *Parrot) ToString() string {
+	return spew.Sprintf("%#+v", p)
 }
 
 // Users list management functions
-func (p *parrot) AddUser(userid string) bool {
-    p.Users[userid] = time.Now()
-    return true
+func (p *Parrot) AddUser(userid string) bool {
+	p.Users[userid] = time.Now()
+	return true
 }
 
 // repeat functions
-func (p *parrot) Repeat(input string) string {
-    r, _ := regexp.Compile("[oO]")
-    return p.RepeatPrefix + " " + r.ReplaceAllString(input, "oooo")
+func (p *Parrot) Repeat(input string) string {
+	r, _ := regexp.Compile("[oO]")
+	return p.repeatPrefix + " " + r.ReplaceAllString(input, "oooo")
 }
 
-func (p *parrot) WillRepeat() bool {
-    var shouldI bool = p.threesholdExeded(p.LastRepeat, p.RepeatFrequency)
+func (p *Parrot) WillRepeat() bool {
 
-    //spew.Printf("LastRepeat     : %v\n", p.LastRepeat)
-    //spew.Printf("RepeatFrequency: %v\n", p.RepeatFrequency)
-    //spew.Printf("shouldI        : %v\n", shouldI)
-
-    if shouldI {
-        p.LastRepeat = time.Now()
-        return true
-    }
-    return false
+	if p.isThreesholdExeded() {
+		p.LastRepeat = time.Now()
+		p.RepeatAccumulator = 0
+		return true
+	}
+	return false
 }
 
 // shoulder functions
+func (p *Parrot) SwitchShoulder(userId string) {
+	log.Printf("I Switched to %v shoulder", userId)
+}
 
 // utilities
-func (p *parrot) threesholdExeded(lastOccurence time.Time, frequency float64) bool {
-    var timeDelta = time.Now().Sub(lastOccurence)
-    var chance    = timeDelta.Minutes()*frequency
-    var s1 = rand.NewSource(time.Now().UnixNano())
-    var r1 = rand.New(s1).Float64()
+func (p *Parrot) isThreesholdExeded() bool {
+	var r1 = rand.New(rand.NewSource((time.Now().UnixNano()))).Float64()
 
-    //spew.Printf("lastOccurence: %v\ntime.Now(): %v\n" , lastOccurence, time.Now())
-    //spew.Printf("timeDelta    : %v\nfrequency : %v\n" , timeDelta, frequency)
-    //spew.Printf("chance       : %v\nrandom    : %v\n", chance, r1)
+	if p.Debug {
+		spew.Printf("frequency: %v\n", p.repeatFrequency)
+		spew.Printf("treeshold: %v\n", (1-p.repeatFrequency)*p.RepeatMultiplier)
+		spew.Printf("accumulator: %v\n", p.RepeatAccumulator)
+		spew.Printf("random: %v\n", r1)
+	}
 
-    switch  {
-    case r1 <= chance:
-        return true
-    default:
-        return false
-    }
+	p.RepeatAccumulator += r1
+
+	switch {
+	case (p.RepeatAccumulator + r1) > (1-p.repeatFrequency)*p.RepeatMultiplier:
+		return true
+	default:
+		return false
+	}
 }

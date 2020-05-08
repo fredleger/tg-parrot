@@ -1,28 +1,27 @@
 ROOT_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
-GOPATH := $(HOME)/go:$(ROOT_DIR)
+GOPATH := $(ROOT_DIR):$(HOME)/go
 
-all: clean install-dep build install
+all: clean vendors build
 
-debug:
-	@echo "GOPATH: $(GOPATH)"
+deep-clean: clean
+	rm -rf src/github.com/fredleger/CocoTelegramParrotBot/vendor
 
 clean:
 	rm -rf bin/*
 	rm -rf pkg/*
-	cd src/github.com/fredleger/CocoTelegramParrotBot/parrotlib && go clean
-	cd src/github.com/fredleger/CocoTelegramParrotBot/cocobot && go clean
+	cd src/github.com/fredleger/CocoTelegramParrotBot && go clean
 
-install-dep:
-	cd src/github.com/fredleger/CocoTelegramParrotBot/parrotlib && go get -d -v
-	cd src/github.com/fredleger/CocoTelegramParrotBot/cocobot && go get -d -v
+vendors:
+	cd src/github.com/fredleger/CocoTelegramParrotBot && go mod vendor
 
 build:
-	cd src/github.com/fredleger/CocoTelegramParrotBot/parrotlib && go build
-	cd src/github.com/fredleger/CocoTelegramParrotBot/cocobot && go build
+	cd src/github.com/fredleger/CocoTelegramParrotBot && \
+		CGO_ENABLED=0 go build \
+    		-i -v -a -installsuffix cgo -gcflags "all=-N -l" \
+    		-o $(ROOT_DIR)/bin/CocoTelegramParrotBot .
 
 install:
-	cd src/github.com/fredleger/CocoTelegramParrotBot/parrotlib && go install
-	cd src/github.com/fredleger/CocoTelegramParrotBot/cocobot && go install
+	cd src/github.com/fredleger/CocoTelegramParrotBot && go install
 
 docker-image:
-	docker build -t webofmars/tg-parrot:develop -f $(ROOT_DIR)/Dockerfile .
+	docker build -t webofmars/tg-parrot:develop .
