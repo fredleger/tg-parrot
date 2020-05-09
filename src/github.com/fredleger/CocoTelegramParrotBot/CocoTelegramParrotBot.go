@@ -9,6 +9,7 @@ import (
 	viper "github.com/spf13/viper"
 	tgbotapi "gopkg.in/telegram-bot-api.v4"
 	"math/rand"
+	"os"
 	"strconv"
 	"time"
 )
@@ -98,6 +99,7 @@ func getConfig() {
 	logLevel = viper.GetInt("log_level")
 
 	// setup looging
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	zerolog.SetGlobalLevel(zerolog.Level(logLevel))
 
