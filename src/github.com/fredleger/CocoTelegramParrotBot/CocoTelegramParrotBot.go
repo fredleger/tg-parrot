@@ -4,9 +4,10 @@ import (
 	parrotlib "CocoTelegramParrotBot/parrotlib"
 	"github.com/davecgh/go-spew/spew"
 	gocron "github.com/jasonlvhit/gocron"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	viper "github.com/spf13/viper"
 	tgbotapi "gopkg.in/telegram-bot-api.v4"
-	"log"
 	"math/rand"
 	"strconv"
 	"time"
@@ -27,7 +28,7 @@ func main() {
 	var err error
 	bot, err = tgbotapi.NewBotAPI(TelegramApiToken)
 	if err != nil {
-		log.Panic(spew.Sprintf("FATAL: error when creating telegram bot : %v", err))
+		log.Fatal().Msgf(spew.Sprintf("FATAL: error when creating telegram bot : %v", err))
 	}
 
 	bot.Debug = debug
@@ -51,6 +52,9 @@ func main() {
 		if update.Message == nil {
 			continue
 		}
+
+		// debug
+		log.Debug().Msgf("Curent chatId: %d", update.Message.Chat.ID)
 
 		// memorize the active channels
 		parrot.AddChat(string(update.Message.Chat.ID))
@@ -88,14 +92,23 @@ func getConfig() {
 
 	// handle config as env
 	viper.SetEnvPrefix("coco") // will be uppercased automatically
+	viper.BindEnv("debug")
 	viper.BindEnv("tg_token")
 	viper.BindEnv("events_period_mins")
 	TelegramApiToken = viper.GetString("tg_token")
+	debug = viper.GetBool("debug")
 
-	log.Println(spew.Sprintf("TgToken: %v", TelegramApiToken))
+	// setup looging
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	if debug {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	}
+
+	log.Info().Msgf(spew.Sprintf("TgToken: %v", TelegramApiToken))
 
 	if len(TelegramApiToken) <= 0 {
-		log.Panic("Null telegram API token given !")
+		log.Fatal().Msgf("Null telegram API token given !")
 	}
 }
 
@@ -127,7 +140,7 @@ func handleCommand(bot *tgbotapi.BotAPI, command *tgbotapi.Message) {
 	}
 
 	if _, err := bot.Send(msg); err != nil {
-		log.Panic(err)
+		log.Fatal().Msgf("Error: %s", err)
 	}
 }
 
@@ -152,12 +165,12 @@ func triggerRandomEvent() {
 	events := []interface{}{randomShoulderSwitch, randomSentence, randomQuizz, PreferedSentence}
 	eventId := int(rand.New(rand.NewSource((time.Now().UnixNano()))).Float64() * float64(len(events)))
 
-	log.Println(spew.Sprintf("Triggered random event: %v", events[eventId]))
+	log.Debug().Msgf("Triggered random event: %s", events[eventId])
 	events[eventId].(func())()
 }
 
 func PreferedSentence() {
-	log.Println(spew.Sprintf("PreferedSentence: starting"))
+	log.Debug().Msgf("PreferedSentence: starting")
 	// TODO: need a chat lists
 	// msg := tgbotapi.NewMessage(, parrot.SayPreferedSentance())
 	// if _, err := bot.Send(); err != nil {
@@ -166,7 +179,7 @@ func PreferedSentence() {
 }
 
 func randomShoulderSwitch() {
-	log.Println(spew.Sprintf("randomShoulderSwitch: starting"))
+	log.Debug().Msgf("randomShoulderSwitch: starting")
 	ruser, ok := parrot.RandomUser()
 	if ok {
 		parrot.SwitchShoulder(ruser)
@@ -175,11 +188,11 @@ func randomShoulderSwitch() {
 }
 
 func randomSentence() {
-	log.Println(spew.Sprintf("randomSentence: starting"))
+	log.Debug().Msgf("randomSentence: starting")
 }
 
 func randomQuizz() {
-	log.Println(spew.Sprintf("randomQuizz: starting"))
+	log.Debug().Msgf("randomQuizz: starting")
 }
 
 func Broadcast(text string) {
