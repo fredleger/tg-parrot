@@ -13,8 +13,8 @@ import (
 	"time"
 )
 
-var TelegramApiToken string = ""
-var debug bool = false
+var logLevel int
+var TelegramApiToken string
 var parrot parrotlib.Parrot
 var bot *tgbotapi.BotAPI
 
@@ -30,8 +30,6 @@ func main() {
 	if err != nil {
 		log.Fatal().Msgf(spew.Sprintf("FATAL: error when creating telegram bot : %v", err))
 	}
-
-	bot.Debug = debug
 
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
@@ -73,6 +71,7 @@ func main() {
 
 func getConfig() {
 
+	viper.SetDefault("log_level", 1)
 	viper.SetDefault("tg_token", nil)
 	viper.SetDefault("events_period_mins", 2)
 
@@ -86,24 +85,21 @@ func getConfig() {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			// Config file not found; ignore error
 		} else {
-			log.Printf(spew.Sprintf("Error reading config file %v : %v", "viper config path", err))
+			log.Fatal().Msgf("Error reading config file %s: %s", "viper config path", err)
 		}
 	}
 
 	// handle config as env
 	viper.SetEnvPrefix("coco") // will be uppercased automatically
-	viper.BindEnv("debug")
+	viper.BindEnv("log_level")
 	viper.BindEnv("tg_token")
 	viper.BindEnv("events_period_mins")
 	TelegramApiToken = viper.GetString("tg_token")
-	debug = viper.GetBool("debug")
+	logLevel = viper.GetInt("log_level")
 
 	// setup looging
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	if debug {
-		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	}
+	zerolog.SetGlobalLevel(zerolog.Level(logLevel))
 
 	log.Info().Msgf(spew.Sprintf("TgToken: %v", TelegramApiToken))
 
