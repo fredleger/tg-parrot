@@ -1,21 +1,28 @@
 package parrotlib
 
 import (
+	"github.com/davecgh/go-spew/spew"
 	"log"
 	"math/rand"
 	"regexp"
+	"sort"
 	"time"
-
-	//"log"
-	"github.com/davecgh/go-spew/spew"
 )
+
+type UserStats struct {
+	UserId        uint64
+	MessagesCount uint64
+	LastActivity  time.Time
+}
 
 type Parrot struct {
 	Name  string
 	Debug bool
 
-	PreferedSentence string
-	Users            map[string]time.Time
+	chats []string
+
+	preferedSentence string
+	Users            map[string]*UserStats
 
 	repeatPrefix      string
 	repeatFrequency   float64
@@ -23,7 +30,7 @@ type Parrot struct {
 	RepeatAccumulator float64
 	LastRepeat        time.Time
 
-	OnUseridShoulder   string
+	onUserShoulder     string
 	LastShoulderSwitch time.Time
 }
 
@@ -34,11 +41,11 @@ func NewParrot(name string, sentence string, repeatPrefix string, repeatFrequenc
 
 	p := new(Parrot)
 	p.Name = name
-	p.OnUseridShoulder = ""
-	p.PreferedSentence = sentence
+	p.onUserShoulder = ""
+	p.preferedSentence = sentence
 	p.repeatPrefix = repeatPrefix
 	p.repeatFrequency = repeatFrequency
-	p.Users = make(map[string]time.Time)
+	p.Users = make(map[string]*UserStats)
 	p.LastShoulderSwitch = time.Time{}
 	p.LastRepeat = time.Time{}
 	p.RepeatAccumulator = 0
@@ -46,18 +53,48 @@ func NewParrot(name string, sentence string, repeatPrefix string, repeatFrequenc
 	return *p
 }
 
-func (p Parrot) Dump() {
-	spew.Dump(p)
+func (p Parrot) Dump() string {
+	return spew.Sprintf("%v", p)
 }
 
 func (p *Parrot) ToString() string {
 	return spew.Sprintf("%#+v", p)
 }
 
+// Say functions
+func (p *Parrot) SayPreferedSentance() string {
+	return p.preferedSentence
+}
+
+// Chats function
+func (p *Parrot) AddChat(chatId string) {
+
+	if !sliceContains(p.chats, chatId) {
+		p.chats = append(p.chats, chatId)
+	}
+}
+
+func (p *Parrot) GetChats() []string {
+	return p.chats
+}
+
 // Users list management functions
-func (p *Parrot) AddUser(userid string) bool {
-	p.Users[userid] = time.Now()
+func (p *Parrot) AddUser(UserName string) bool {
+	if user, ok := p.Users[UserName]; ok {
+		user.LastActivity = time.Now()
+	} else {
+		p.Users[UserName] = new(UserStats)
+		p.Users[UserName].LastActivity = time.Now()
+		p.Users[UserName].MessagesCount = 0
+	}
 	return true
+}
+
+func (p *Parrot) RandomUser() (string, bool) {
+	for k := range p.Users {
+		return k, true
+	}
+	return "", false
 }
 
 // repeat functions
@@ -79,6 +116,15 @@ func (p *Parrot) WillRepeat() bool {
 // shoulder functions
 func (p *Parrot) SwitchShoulder(userId string) {
 	log.Printf("I Switched to %v shoulder", userId)
+	p.onUserShoulder = userId
+}
+
+func (p *Parrot) GetCurrentShoulder() string {
+	if p.onUserShoulder != "" {
+		return p.onUserShoulder
+	} else {
+		return "nobody"
+	}
 }
 
 // utilities
@@ -100,4 +146,10 @@ func (p *Parrot) isThreesholdExeded() bool {
 	default:
 		return false
 	}
+}
+
+// TODO : move that in another package
+func sliceContains(s []string, searchterm string) bool {
+	i := sort.SearchStrings(s, searchterm)
+	return i < len(s) && s[i] == searchterm
 }
