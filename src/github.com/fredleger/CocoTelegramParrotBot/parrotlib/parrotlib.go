@@ -1,17 +1,16 @@
 package parrotlib
 
 import (
-	"github.com/davecgh/go-spew/spew"
+	"encoding/json"
 	"log"
 	"math/rand"
 	"regexp"
-	"sort"
 	"time"
 )
 
 type UserStats struct {
 	UserId        uint64
-	MessagesCount uint64
+	MessagesCount int64
 	LastActivity  time.Time
 }
 
@@ -19,7 +18,7 @@ type Parrot struct {
 	Name  string
 	Debug bool
 
-	chats []string
+	chats []int64
 
 	preferedSentence string
 	Users            map[string]*UserStats
@@ -37,8 +36,6 @@ type Parrot struct {
 // constructor
 func NewParrot(name string, sentence string, repeatPrefix string, repeatFrequency float64, repeatMultiplier float64) Parrot {
 
-	spew.Config.Indent = "\t"
-
 	p := new(Parrot)
 	p.Name = name
 	p.onUserShoulder = ""
@@ -54,27 +51,28 @@ func NewParrot(name string, sentence string, repeatPrefix string, repeatFrequenc
 }
 
 func (p Parrot) Dump() string {
-	return spew.Sprintf("%v", p)
+	return p.ToString()
 }
 
 func (p *Parrot) ToString() string {
-	return spew.Sprintf("%#+v", p)
+	obj, _ := json.Marshal(p)
+	return string(obj)
 }
 
 // Say functions
-func (p *Parrot) SayPreferedSentance() string {
+func (p *Parrot) GetPreferedSentence() string {
 	return p.preferedSentence
 }
 
 // Chats function
-func (p *Parrot) AddChat(chatId string) {
+func (p *Parrot) AddChat(chatId int64) {
 
-	if !sliceContains(p.chats, chatId) {
+	if !sliceContainsInt64(p.chats, chatId) {
 		p.chats = append(p.chats, chatId)
 	}
 }
 
-func (p *Parrot) GetChats() []string {
+func (p *Parrot) GetChats() []int64 {
 	return p.chats
 }
 
@@ -131,13 +129,6 @@ func (p *Parrot) GetCurrentShoulder() string {
 func (p *Parrot) isThreesholdExeded() bool {
 	var r1 = rand.New(rand.NewSource((time.Now().UnixNano()))).Float64()
 
-	if p.Debug {
-		spew.Printf("frequency: %v\n", p.repeatFrequency)
-		spew.Printf("treeshold: %v\n", (1-p.repeatFrequency)*p.RepeatMultiplier)
-		spew.Printf("accumulator: %v\n", p.RepeatAccumulator)
-		spew.Printf("random: %v\n", r1)
-	}
-
 	p.RepeatAccumulator += r1
 
 	switch {
@@ -149,7 +140,11 @@ func (p *Parrot) isThreesholdExeded() bool {
 }
 
 // TODO : move that in another package
-func sliceContains(s []string, searchterm string) bool {
-	i := sort.SearchStrings(s, searchterm)
-	return i < len(s) && s[i] == searchterm
+func sliceContainsInt64(s []int64, searchterm int64) bool {
+	for _, k := range s {
+		if k == searchterm {
+			return true
+		}
+	}
+	return false
 }

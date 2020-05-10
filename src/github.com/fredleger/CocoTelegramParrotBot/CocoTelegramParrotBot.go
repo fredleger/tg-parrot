@@ -3,14 +3,13 @@ package main
 import (
 	parrotlib "CocoTelegramParrotBot/parrotlib"
 	"github.com/davecgh/go-spew/spew"
-	gocron "github.com/jasonlvhit/gocron"
+	"github.com/jasonlvhit/gocron"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	viper "github.com/spf13/viper"
+	"github.com/spf13/viper"
 	tgbotapi "gopkg.in/telegram-bot-api.v4"
 	"math/rand"
 	"os"
-	"strconv"
 	"time"
 )
 
@@ -56,7 +55,7 @@ func main() {
 		log.Debug().Msgf("Curent chatId: %d", update.Message.Chat.ID)
 
 		// memorize the active channels
-		parrot.AddChat(string(update.Message.Chat.ID))
+		parrot.AddChat(update.Message.Chat.ID)
 
 		// add all talking users to the game
 		parrot.AddUser(update.Message.From.UserName)
@@ -125,12 +124,12 @@ func handleCommand(bot *tgbotapi.BotAPI, command *tgbotapi.Message) {
 		msg.Text = "Sileeence !"
 	case "psst":
 		msg.Text = "Roohh flying away !"
-		randomShoulderSwitch()
+		defer randomShoulderSwitch()
 	case "target":
 		msg.Text = spew.Sprintf("Oooo i goooo to %v shoulder", command.CommandArguments())
 		targetedUserName := command.CommandArguments()
 		parrot.AddUser(targetedUserName)
-		parrot.SwitchShoulder(targetedUserName)
+		defer parrot.SwitchShoulder(targetedUserName)
 	case "whereareyou":
 		msg.Text = spew.Sprintf("I'am on %v shoulder ! heyk !", parrot.GetCurrentShoulder())
 	default:
@@ -195,8 +194,7 @@ func randomQuizz() {
 
 func Broadcast(text string) {
 	for _, chatId := range parrot.GetChats() {
-		realChatId, _ := strconv.ParseInt(chatId, 10, 64)
-		msg := tgbotapi.NewMessage(realChatId, text)
+		msg := tgbotapi.NewMessage(chatId, text)
 		bot.Send(msg)
 	}
 }
